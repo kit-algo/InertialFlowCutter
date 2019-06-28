@@ -1,2 +1,2 @@
 # InertialFlowCutter
-C++ Implementation and evaluations scripts for the InertialFlowCutter algorithm to compute Customizable Contraction Hierarchy orders.
+C++ Implementation and evaluation scripts for the InertialFlowCutter algorithm to compute Customizable Contraction Hierarchy orders.
