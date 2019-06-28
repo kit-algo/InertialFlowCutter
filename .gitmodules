@@ -1,3 +1,6 @@
 [submodule "extern/KaHIP"]
 	path = extern/KaHIP
 	url = https://github.com/schulzchristian/KaHIP.git
+[submodule "extern/RoutingKit"]
+	path = extern/RoutingKit
+	url = https://github.com/RoutingKit/RoutingKit.git
