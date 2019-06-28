@@ -1,0 +1,24 @@
+PierceRating pierce_rating max_target_minus_source_hop_dist min_source_hop_dist max_target_hop_dist max_target_minus_source_weight_dist min_source_weight_dist max_target_weight_dist random oldest max_arc_weight min_arc_weight circular_hop circular_weight max_target_minus_source_hop_dist_with_source_dist_tie_break max_target_minus_source_hop_dist_with_closer_dist_tie_break
+AvoidAugmentingPath avoid_augmenting_path avoid_and_pick_best do_not_avoid avoid_and_pick_oldest avoid_and_pick_random
+GraphSearchAlgorithm graph_search_algorithm pseudo_depth_first_search breadth_first_search depth_first_search
+SkipNonMaximumSides skip_non_maximum_sides skip no_skip
+DumpState dump_state no yes
+ReportCuts report_cuts yes no
+BulkDistance bulk_distance no yes
+SeparatorSelection separator_selection node_min_expansion edge_min_expansion node_first edge_first
+var int cutter_count x>0 3
+var int random_seed true 5489
+var int source x>=-1 -1
+var int target x>=-1 -1
+var int thread_count x>=1 1
+var int max_cut_size x>=1 1000
+var float max_imbalance 0.5>=x&&x>=0.0 0.2
+var int branch_factor x>=1 5
+var double chunk_size 0.5>=x&&x>=0.0 0.1
+var double bulk_distance_factor 0.5>x&&x>0.0 0.05
+var double bulk_assimilation_threshold 0.5>x&&x>0.0 0.4
+var double bulk_assimilation_order_threshold 0.5>x&&x>0.0 0.25
+var double initial_assimilated_fraction 0.5>x&&x>0.0 0.05
+var double bulk_step_fraction 0.5>x&&x>0.0 0.05
+var int geo_pos_ordering_cutter_count x>0 8
+var int distance_ordering_cutter_count x>=0 0
