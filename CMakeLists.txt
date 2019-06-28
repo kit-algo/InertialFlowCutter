@@ -47,7 +47,7 @@ if (USE_KAHIP)
     target_compile_definitions(console PUBLIC USE_KAHIP)
     target_link_libraries (console PUBLIC interface_static)
 endif()
-target_link_libraries(console PUBLIC OpenMP::OpenMP_CXX ${READLINE})
+target_link_libraries(console PUBLIC ${READLINE})
 target_link_libraries(console PUBLIC ${TBB_LIBRARIES})
 
 
