@@ -2420,6 +2420,43 @@ vector<Command>cmd = {
 	}
 },
 {
+	"reorder_nodes_in_inertial_flow_nested_dissection_order", 1,
+	"Reorders all nodes in nested dissection order. min_balance is arg1",
+	[](vector<string>args){
+		if(!is_symmetric(tail, head))
+			throw runtime_error("Graph must be symmetric");
+		if(has_multi_arcs(tail, head))
+			throw runtime_error("Graph must not have multi arcs");
+		if(!is_loop_free(tail, head))
+			throw runtime_error("Graph must not have loops");
+		double min_balance = stof(args[0]);
+		if(min_balance < 0 || min_balance > 0.5)
+			throw runtime_error("min balance parameter must be between 0.0 and 0.5");
+
+		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		permutate_nodes(cch_order::compute_nested_dissection_graph_order(tail, head, arc_weight, inertial_flow::ComputeSeparator(node_geo_pos, min_balance, true)));
+	}
+},
+{
+	"reorder_nodes_in_inertial_flow_ford_fulkerson_nested_dissection_order", 1,
+	"Reorders all nodes in nested dissection order with Ford Fulkerson as flow algorithm. min_balance is arg1",
+	[](vector<string>args){
+		if(!is_symmetric(tail, head))
+			throw runtime_error("Graph must be symmetric");
+		if(has_multi_arcs(tail, head))
+			throw runtime_error("Graph must not have multi arcs");
+		if(!is_loop_free(tail, head))
+			throw runtime_error("Graph must not have loops");
+		double min_balance = stof(args[0]);
+		if(min_balance < 0 || min_balance > 0.5)
+			throw runtime_error("min balance parameter must be between 0.0 and 0.5");
+
+		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		permutate_nodes(cch_order::compute_nested_dissection_graph_order(tail, head, arc_weight, inertial_flow::ComputeSeparator(node_geo_pos, min_balance, false)));
+	}
+},
+
+{
 	"inertial_flow_separator", 1,
 	"Runs the inertial cut algorithm. The argument is the minimum size of the smaller side, a value between 0.0 and 0.5",
 	[](vector<string>args){
