@@ -49,5 +49,6 @@ if (USE_KAHIP)
 endif()
 target_link_libraries(console PUBLIC ${READLINE})
 target_link_libraries(console PUBLIC ${TBB_LIBRARIES})
+target_link_libraries(console PUBLIC tinfo)
 
 
