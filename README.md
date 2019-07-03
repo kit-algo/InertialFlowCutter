@@ -9,3 +9,18 @@ To compile the code you need a recent C++14 ready compiler (e.g. g++ version >= 
 You also need the readline library https://tiswww.case.edu/php/chet/readline/rltop.html.
 
 We use KaHiP and RoutingKit as submodules. For these, you will also need OpenMP.
+
+Steps for installation (on Ubuntu):
+```
+# Install the prerequisites
+sudo apt install cmake mpich2 libreadline-dev libtbb-dev
+
+# Get the code
+git clone --recursive https://github.com/kit-algo/InertialFlowCutter
+cd InertialFlowCutter
+mkdir build && cd build
+
+# Build
+cmake -DCMAKE_BUILD_TYPE=Release ../
+make -j4
+```
