@@ -80,4 +80,3 @@ if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_link_libraries(console PUBLIC tinfo)
 endif()
 
-
