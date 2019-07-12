@@ -4,7 +4,7 @@ project (InertialFlowCutter)
 option (USE_KAHIP "Link KaHiP and at kahip related commands to console." ON)
 
 set (CMAKE_CXX_STANDARD 14)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Werror=return-type -Wno-stringop-truncation")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Werror=return-type -Wno-stringop-truncation -pthread")
 set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lm")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -41,9 +41,9 @@ if (USE_KAHIP)
     add_subdirectory (extern/KaHIP EXCLUDE_FROM_ALL)
 endif()
 
-set (SOURCE_FILES 
-    src/console.cpp 
-    src/fancy_input.cpp 
+set (SOURCE_FILES
+    src/console.cpp
+    src/fancy_input.cpp
     src/permutation.cpp
     src/list_graph.cpp
     src/file_utility.cpp
