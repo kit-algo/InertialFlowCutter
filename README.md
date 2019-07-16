@@ -41,8 +41,8 @@ Run
 ```shell
 python3 inertialflowcutter_order.py <graph_path> <order_path>
 ```
-to obtain a CCH order and store it at `<order_path>`, again in the RoutingKit binary vector format.
+to obtain a CCH order and store it at `<order_path>` using the default parameters suggested in the paper.
+The order is again in the RoutingKit binary vector format.
 You can instead get it in text format by uncommenting line 44.
-This will use the suggested default parameters from the paper.
 For more parallelism (yes, please), increase the thread_count parameter in line 36.
 You can specify the number of cutters in line 32, however more than 8 do not seem particularly useful.
