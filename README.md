@@ -8,7 +8,8 @@ All code in src/ other than flow_cutter_accelerated.h, ford_fulkerson.h was writ
 To compile the code you need a recent C++14 ready compiler (e.g. g++ version >= 8.2) and the Intel Threading Building Blocks (TBB) library.
 You also need the readline library https://tiswww.case.edu/php/chet/readline/rltop.html.
 
-We use KaHiP and RoutingKit as submodules. For these, you will also need OpenMP.
+We use KaHiP and RoutingKit as submodules. For these, you will also need OpenMP and MPI (for KaHiP, even though we don't use the distributed partitioner).
+If you don't want to use them, you can disable them in the CMakeLists.txt.
 
 
 ## Building
