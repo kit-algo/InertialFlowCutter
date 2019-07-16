@@ -23,7 +23,7 @@ make
 
 ### Building on macOS
 If you want to build InertialFlowCutter on macOS additional steps are required. As macOS does not support `aligned_alloc` you need to modify `extern/RoutingKit/generate_make_file` and change line 10 to
-```shell
+```
 compiler_options = ["-Wall", "-DNDEBUG", "-march=native", "-ffast-math", "-std=c++11", "-O3", "-DROUTING_KIT_NO_ALIGNED_ALLOC"]
 ``` 
 Then, run `generate_make_file` to build a suitable Makefile. 
