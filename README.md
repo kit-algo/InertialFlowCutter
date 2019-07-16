@@ -23,7 +23,7 @@ make
 
 ### Building on macOS
 If you want to build InertialFlowCutter on macOS additional steps are required. As macOS does not support `aligned_alloc` you need to modify `extern/RoutingKit/generate_make_file` and change line 10 to
-```python3
+```shell
 compiler_options = ["-Wall", "-DNDEBUG", "-march=native", "-ffast-math", "-std=c++11", "-O3", "-DROUTING_KIT_NO_ALIGNED_ALLOC"]
 ``` 
 Then, run `generate_make_file` to build a suitable Makefile. 
@@ -37,8 +37,7 @@ The first two represent the graph in CSR format, the third contains the metric i
 You can convert from Metis and Dimacs format using tools in this repository, see evaluation/README.md for further details; or write your own converter.
 
 Run
-```
-shell
+```shell
 python3 inertialflowcutter_order.py <graph_path> <order_path>
 ```
 to obtain a CCH order and store it at `<order_path>`, again in the RoutingKit binary vector format.
