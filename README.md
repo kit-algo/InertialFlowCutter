@@ -14,7 +14,7 @@ If you don't want to use them, you can disable them in the CMakeLists.txt.
 
 ## Building
 
-Clone this repository `git clone --recursive` and navigate to the root directory. Then run the following commands.
+Clone this repository `git clone` and navigate to the root directory. Then run the following commands.
 
 ```shell
 mkdir build && cd build
