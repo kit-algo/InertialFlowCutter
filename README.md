@@ -14,13 +14,14 @@ If you don't want to use them, you can disable them in the CMakeLists.txt.
 
 ## Building
 
-Clone this repository `git clone` and navigate to the root directory. Then run the following commands.
+Run
 
 ```shell
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
+from the top-level directory of this repository.
 
 ### Building on macOS
 If you want to build the RoutingKit query and customization on macOS, additional steps are required. As macOS does not support `aligned_alloc` you need to modify `extern/RoutingKit/generate_make_file` and change line 10 to
