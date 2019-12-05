@@ -15,6 +15,7 @@
 #include <random>
 #include <memory>
 #include <atomic>
+#include <array>
 
 #include "flow_cutter_config.h"
 #include "permutation.h"
