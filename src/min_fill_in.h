@@ -313,6 +313,231 @@ namespace cch_order{
 		return order; // NVRO
 	}
 
+	template<class ComputeCut>
+	ArrayIDIDFunc compute_nested_dissection_expanded_graph_order(
+		ArrayIDIDFunc tail, ArrayIDIDFunc head,
+		ArrayIDIDFunc input_node_id,
+		ArrayIDIDFunc input_arc_id,
+		ArrayIDFunc<int> arc_weight, 
+		const ComputeCut& compute_cut
+	){
+		assert(is_connected(tail, head));
+		int node_count = tail.image_count();
+		int arc_count = tail.preimage_count();
+		if (arc_count == 0) return {};
+
+		std::deque<int> cut;
+		if (arc_count + 1 == node_count) {
+			//handle trees (and paths)
+			//this is in O(n^2) for stars but should work fine...
+
+			auto out_arc = invert_sorted_id_id_func(tail);
+			auto back_arc = compute_back_arc_permutation(tail, head);
+
+			std::vector<int> children(node_count, 1);
+			std::vector<pair<int, int>> order = {{0, -1}};
+
+			for (unsigned i = 0; i < order.size(); i++) {
+				const int cur = order[i].first;
+				const int prev = order[i].second;
+
+				for (int j = out_arc.range_begin[cur]; j < out_arc.range_begin[cur + 1]; j++) {
+					if (head(j) == prev) continue;
+					order.push_back({head(j), cur});
+				}
+			}
+			assert((int)order.size() == node_count);
+			for (int i = (int)order.size() - 1; i >= 0; i--) {
+				const int cur = order[i].first;
+				const int prev = order[i].second;
+
+				for (int j = out_arc.range_begin[cur]; j < out_arc.range_begin[cur + 1]; j++) {
+					if (head(j) == prev) continue;
+					children[cur] += children[head(j)];
+				}
+			}
+			int best_arc = 0;
+			int best_score = -1;
+			for (int cur_arc = 0; cur_arc < arc_count; cur_arc++) {
+				int cur_score = std::min(children[head(cur_arc)], tail(cur_arc));
+				cur_score = min(cur_score, node_count - cur_score);
+				if (cur_score >= best_score) {
+					best_score = cur_score;
+					best_arc = cur_arc;
+				}
+			}
+			cut = {best_arc, back_arc(best_arc)};
+		} else {
+			cut = compute_cut(tail, head, input_node_id, arc_weight);
+		}
+		assert(cut.size() > 0);
+
+		ArrayIDIDFunc order(arc_count, input_arc_id.image_count());
+		int order_begin = 0;
+		int order_end = arc_count;
+
+		BitIDFunc keep_arc_flag(arc_count);
+		keep_arc_flag.fill(true);
+		for(auto x : cut) {
+			order[order_begin] = input_arc_id(x);
+			order_begin++;
+			keep_arc_flag.set(x, false);
+		}
+
+		int new_arc_count = count_true(keep_arc_flag);
+		input_arc_id = keep_if(keep_arc_flag, new_arc_count, std::move(input_arc_id));
+		tail = keep_if(keep_arc_flag, new_arc_count, std::move(tail));
+		head = keep_if(keep_arc_flag, new_arc_count, std::move(head));
+		arc_weight = keep_if(keep_arc_flag, new_arc_count, std::move(arc_weight));
+		arc_count = new_arc_count;
+
+		auto x = compute_preorder(compute_successor_function(tail, head));
+		auto& preorder = x.first;
+
+		{
+			auto inv_preorder = inverse_permutation(preorder);
+			tail = chain(std::move(tail), inv_preorder);
+			head = chain(std::move(head), inv_preorder);
+			input_node_id = chain(preorder, std::move(input_node_id));
+		}
+
+		{
+			auto p = sort_arcs_first_by_tail_second_by_head(tail, head);
+			tail = chain(p, std::move(tail));
+			head = chain(p, std::move(head));
+			arc_weight = chain(p, std::move(arc_weight));
+			input_arc_id = chain(p, std::move(input_arc_id));
+		}
+
+		auto get_sub_order_begin = [&](int arc_begin, int arc_end) {
+			int sub_arc_count = arc_end - arc_begin;
+
+			int sub_order_begin = order_begin;
+			assert(order_begin + sub_arc_count <= order_end);
+			order_begin += sub_arc_count;
+			return sub_order_begin;
+		};
+
+		struct SubProblem {
+			int node_begin, node_end, arc_begin, arc_end, sub_order_begin;
+			int node_count() const { return node_end - node_begin; }
+			int arc_count() const { return arc_end - arc_begin; }
+		};
+		std::vector<SubProblem> big, small;
+
+		// By reordering the nodes in preorder, we can guarentee, that the nodes of every component are from a coninous range.
+		// As we sorted the arcs this is also true for the arcs.
+		// We identify components by marking the node in each component with the minimum ID.
+		// We do this using the following observation, if an arc (u,v) exists with u<v then v is not such a node
+		BitIDFunc component_begin(node_count);
+		component_begin.fill(true);
+		for(int i=0; i<arc_count; ++i)
+			component_begin.set(std::max(head(i), tail(i)), false);
+		{
+			int node_begin = 0;
+			int arc_begin = 0;
+			for (int node_end = 1; node_end < node_count; ++node_end) {
+				if (component_begin(node_end)) {
+					int arc_end = arc_begin;
+					while (arc_end < arc_count && tail(arc_end) < node_end) {
+						++arc_end;
+					}
+					int sub_order_begin = get_sub_order_begin(arc_begin, arc_end);
+					SubProblem sp = {node_begin, node_end, arc_begin, arc_end, sub_order_begin};
+					if (sp.node_count() > TASK_SPAWN_CUTOFF) {
+						big.push_back(sp);
+					} else {
+						small.push_back(sp);
+					}
+					node_begin = node_end;
+					arc_begin = arc_end;
+				}
+			}
+
+			int sub_order_begin = get_sub_order_begin(arc_begin, arc_count);
+			SubProblem sp = {node_begin, node_count, arc_begin, arc_count, sub_order_begin};
+			if (sp.node_count() > TASK_SPAWN_CUTOFF) {
+				big.push_back(sp);
+			} else {
+				small.push_back(sp);
+			}
+		}
+
+		//auto on_new_component = [&tail, &head, &input_node_id, &arc_weight, &order, &compute_connected_graph_order](SubProblem& sub_problem){
+		auto on_new_component = [&](SubProblem sub_problem){
+			int node_begin = sub_problem.node_begin; int node_end = sub_problem.node_end;
+			int arc_begin = sub_problem.arc_begin; int arc_end = sub_problem.arc_end;
+			int sub_order_begin = sub_problem.sub_order_begin;
+			auto sub_node_count = node_end - node_begin;
+			auto sub_arc_count = arc_end - arc_begin;
+
+			auto sub_tail = id_id_func(
+					sub_arc_count, sub_node_count,
+					[&](int x){
+						return tail(arc_begin + x) - node_begin;
+					}
+			);
+			auto sub_head = id_id_func(
+					sub_arc_count, sub_node_count,
+					[&](int x){
+						return head(arc_begin + x) - node_begin;
+					}
+			);
+			auto sub_input_node_id = id_id_func(
+					sub_node_count, input_node_id.image_count(),
+					[&](int x){
+						return input_node_id(node_begin + x);
+					}
+			);
+			auto sub_input_arc_id = id_id_func(
+					sub_arc_count, input_arc_id.image_count(),
+					[&](int x){
+						return input_arc_id(arc_begin + x);
+					}
+			);
+			auto sub_arc_weight = id_func(
+					sub_arc_count,
+					[&](int x){
+						return arc_weight(arc_begin + x);
+					}
+			);
+			assert(is_loop_free(sub_tail, sub_head));
+
+			auto sub_order = compute_nested_dissection_expanded_graph_order(sub_tail, sub_head, sub_input_node_id, sub_input_arc_id, sub_arc_weight, compute_cut);
+			for (int i = 0; i < sub_arc_count; ++i) {
+				order[sub_order_begin + i] = sub_order(i);
+			}
+		};
+
+		tbb::task_group tg;
+		if (big.size() == 1 && small.size() < 200000) {
+			small.push_back(big.front());
+			big.clear();
+		}
+		//std::sort(big.begin(), big.end(), [](const auto& a, const auto& b) { return a.node_count() > b.node_count(); });
+		for (const SubProblem sp : big) {
+			tg.run(std::bind(on_new_component, sp));
+		}
+		tg.run_and_wait([&]() {
+			std::for_each(small.begin(), small.end(), on_new_component);
+		});
+		assert(order_begin == order_end);
+		assert(is_valid_partial_order(order));
+		return order; // NVRO*/
+	}
+
+	template<class ComputeCut>
+	ArrayIDIDFunc compute_nested_dissection_expanded_graph_order(
+		ArrayIDIDFunc tail, ArrayIDIDFunc head,
+		ArrayIDFunc<int> arc_weight, 
+		const ComputeCut& compute_cut
+	){
+		const int node_count = tail.image_count();
+		const int arc_count = tail.preimage_count();
+		auto input_node_id = identity_permutation(node_count);
+		auto input_arc_id = identity_permutation(arc_count);
+		return compute_nested_dissection_expanded_graph_order(tail, head, input_node_id, input_arc_id, arc_weight, compute_cut);
+	}
 
 	template<class ComputeSeparator, class ComputePartOrder>
 	ArrayIDIDFunc compute_nested_dissection_graph_order(
