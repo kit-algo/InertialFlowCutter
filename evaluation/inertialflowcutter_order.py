@@ -1,13 +1,13 @@
-import pandas as pd
-import numpy as np
+import pathlib
+import re
 import subprocess
 import sys
-import re
+
 
 experiments_folder = ""
 
-binary_path = "./../build/"
-console = binary_path + "console"
+binary_path = pathlib.Path(__file__).parent.absolute() / "../build"
+console = str(binary_path / "console")
 
 def order_path(G,P):
     return experiments_folder + G + "." + P + ".order"
@@ -83,6 +83,6 @@ def main():
     save_inertialflowcutter_cch_order(cutters, G)
     order_time = parse_order_log(G,P)["order_running_time"]
     print(P, G, round(order_time, 3), sep=',')
-            
+
 if __name__ == '__main__':
     main()
