@@ -1,20 +1,22 @@
 import os
+import pathlib
 import re
-import pandas as pd
-import metis_cut as metis
-import kahip_cut as kahip
-import inertialflow_cut as inertialflow
+
 import flowcutter_cut as flowcutter
+import inertialflow_cut as inertialflow
 import inertialflowcutter_cut as ifc
+import kahip_cut as kahip
+import metis_cut as metis
+import pandas as pd
 
 experiments_folder = ""
 graphs = ["col", "cal", "europe", "usa"]
 partitioners = ["metis", "kahip_v2_11", "inertial_flow",  "flowcutter3", "flowcutter20", "inertialflowcutter4", "inertialflowcutter8", "inertialflowcutter12", "inertialflowcutter16"]
 imbalances = [0.0, 0.01, 0.03, 0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9]
 
-binary_path = "./../build/"
-console = binary_path + "console"
-metis_path = "./" + experiments_folder + "gpmetis" 
+binary_path = pathlib.Path(__file__).parent.absolute() / "../build"
+console = str(binary_path / "console")
+metis_path = "./" + experiments_folder + "gpmetis"
 
 def graph_path(G):
     return experiments_folder + G + "/"
@@ -80,7 +82,7 @@ def compute_inertial_flow_cuts(G):
     results = pd.DataFrame(rows)
     return results.set_index("epsilon").sort_index()
 
-def compute_flow_cutter_cuts(G, cutters): 
+def compute_flow_cutter_cuts(G, cutters):
     cuts = flowcutter.flowcutter_pareto(console, graph_path(G), cutters)
     node_count = cuts.iloc[-1]["small_side_size"] + cuts.iloc[-1]["large_side_size"]
     cuts['imbalance'] = cuts["large_side_size"] / ((node_count + 1) // 2) - 1
@@ -97,7 +99,7 @@ def compute_flow_cutter_cuts(G, cutters):
     results = pd.DataFrame(rows)
     return results.set_index("epsilon").sort_index()
 
-def compute_inertial_flow_cutter_cuts(G, cutters): 
+def compute_inertial_flow_cutter_cuts(G, cutters):
     cuts = ifc.inertialflowcutter_pareto(console, graph_path(G), cutters)
     node_count = cuts.iloc[-1]["small_side_size"] + cuts.iloc[-1]["large_side_size"]
     cuts['imbalance'] = cuts["large_side_size"] / ((node_count + 1) // 2) - 1

@@ -1,11 +1,12 @@
-import subprocess
+import pathlib
 import re
+import subprocess
 import sys
 
 experiments_folder = ""
 
-binary_path = "./../build/"
-console = binary_path + "console"
+binary_path = pathlib.Path(__file__).parent.absolute() / "../build"
+console = str(binary_path / "console")
 
 def graph_path(G):
     return experiments_folder + G + "/"
@@ -47,7 +48,7 @@ def save_flowcutter_cch_order(console, ncutters, graph_path, order_path, info_lo
     #args.append("save_permutation_of_nodes_since_last_file_load")
     args.append("save_routingkit_node_permutation_since_last_load")
     args.append(order_path)
-    
+
     with open(info_log, 'w') as f:
         subprocess.run(args, universal_newlines=True, stdout=f)
 
