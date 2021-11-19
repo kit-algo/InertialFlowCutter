@@ -9,6 +9,7 @@
 #include "back_arc.h"
 
 #include <iterator>
+#include <limits>
 
 template<class Tail, class Head>
 ArrayIDIDFunc compute_connected_components(const Tail&tail, const Head&head){
