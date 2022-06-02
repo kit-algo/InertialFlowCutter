@@ -16,6 +16,7 @@
 #include "node_flow_cutter.h"
 #include "triangle_count.h"
 #include "separator.h"
+#include "cut.h"
 #include "vector_io.h"
 #include "inverse_vector.h"
 #include "min_fill_in.h"
@@ -49,6 +50,7 @@ ArrayIDIDFunc node_color, arc_color;
 ArrayIDFunc<GeoPos> node_geo_pos;
 
 ArrayIDIDFunc node_original_position;
+ArrayIDIDFunc arc_original_position;
 
 void check_graph_consitency(){
 	#ifndef NDEBUG
@@ -64,6 +66,7 @@ void check_graph_consitency(){
 	assert(node_geo_pos.preimage_count() == node_count);
 
 	assert(node_original_position.preimage_count() == node_count);
+	assert(arc_original_position.preimage_count() == arc_count);
 
 	for(auto x:node_color)
 		assert(0<= x && x < node_color.image_count());
@@ -135,7 +138,7 @@ void keep_arcs_if(const BitIDFunc&keep_flag){
 	head = keep_if(keep_flag, new_arc_count, move(head));
 	arc_weight = keep_if(keep_flag, new_arc_count, move(arc_weight));
 	arc_color = keep_if(keep_flag, new_arc_count, move(arc_color));
-
+	arc_original_position = keep_if(keep_flag, new_arc_count, std::move(arc_original_position));
 }
 
 static
@@ -144,7 +147,7 @@ void permutate_arcs(const ArrayIDIDFunc&p){
 	head = chain(p, move(head));
 	arc_weight = chain(p, move(arc_weight));
 	arc_color = chain(p, move(arc_color));
-
+	arc_original_position = chain(p, std::move(arc_original_position));
 }
 
 struct Command{
@@ -585,6 +588,7 @@ vector<Command>cmd = {
 			head = std::move(graph.head);
 			node_weight = std::move(graph.node_weight);
 			arc_weight = std::move(graph.arc_weight);
+			arc_original_position = identity_permutation(tail.preimage_count());
 
 			node_color = ArrayIDIDFunc(tail.image_count(), 1);
 			node_color.fill(0);
@@ -604,6 +608,7 @@ vector<Command>cmd = {
 			head = std::move(graph.head);
 			node_weight = std::move(graph.node_weight);
 			arc_weight = std::move(graph.arc_weight);
+			arc_original_position = identity_permutation(tail.preimage_count());
 
 			node_color = ArrayIDIDFunc(tail.image_count(), 1);
 			node_color.fill(0);
@@ -648,6 +653,7 @@ vector<Command>cmd = {
 			head = std::move(graph.head);
 			node_weight = std::move(graph.node_weight);
 			arc_weight = std::move(graph.arc_weight);
+			arc_original_position = identity_permutation(tail.preimage_count());
 
 			node_color = ArrayIDIDFunc(tail.image_count(), 1);
 			node_color.fill(0);
@@ -667,6 +673,7 @@ vector<Command>cmd = {
 			head = std::move(graph.head);
 			node_weight = std::move(graph.node_weight);
 			arc_weight = std::move(graph.arc_weight);
+			arc_original_position = identity_permutation(tail.preimage_count());
 
 			node_color = ArrayIDIDFunc(tail.image_count(), 1);
 			node_color.fill(0);
@@ -693,6 +700,7 @@ vector<Command>cmd = {
 			node_weight.fill(0);
 			arc_weight = ArrayIDFunc<int>(arc_count);
 			arc_weight.fill(0);
+			arc_original_position = identity_permutation(tail.preimage_count());
 
 			node_color = ArrayIDIDFunc(tail.image_count(), 1);
 			node_color.fill(0);
@@ -1282,6 +1290,17 @@ vector<Command>cmd = {
 				}
 			);
 
+			auto extended_arc_original_position = id_id_func(
+				2*tail.preimage_count(),
+				arc_original_position.image_count(),
+				[&](int i){
+					if(i < tail.preimage_count())
+						return arc_original_position(i);
+					else
+						return arc_original_position(i - tail.preimage_count());
+				}
+			);
+
 			auto keep_flag = identify_non_multi_arcs(extended_tail, extended_head);
 
 			for(int i=0; i<tail.preimage_count(); ++i)
@@ -1292,11 +1311,12 @@ vector<Command>cmd = {
 			ArrayIDIDFunc new_head = keep_if(keep_flag, new_arc_count, extended_head);
 			ArrayIDFunc<int> new_arc_weight = keep_if(keep_flag, new_arc_count, extended_arc_weight);
 			ArrayIDIDFunc new_arc_color = keep_if(keep_flag, new_arc_count, extended_arc_color);
-
+			ArrayIDIDFunc new_original_position = keep_if(keep_flag, new_arc_count, extended_arc_original_position);//this is weird...
 			tail = move(new_tail);
 			head = move(new_head);
 			arc_weight = move(new_arc_weight);
 			arc_color = move(new_arc_color);
+			arc_original_position = move(new_original_position);
 		}
 	},
 	{
@@ -1329,6 +1349,7 @@ vector<Command>cmd = {
 
 			tail = add_preimage_at_end(std::move(tail), neighbor_count*2);
 			head = add_preimage_at_end(std::move(head), neighbor_count*2);
+			arc_original_position = add_preimage_at_end(std::move(arc_original_position), neighbor_count*2);
 
 			int i = old_arc_count;
 			forall_in_id_string(
@@ -2881,7 +2902,7 @@ vector<Command>cmd = {
 
 {
 	"reorder_nodes_at_random",
-	"Reorders all nodes according to a dfs rooted at an arbitrary node.",
+	"Reorders all nodes according to a random permutation.",
 	[]{
 		ArrayIDIDFunc perm(tail.image_count(), tail.image_count());
 		std::mt19937 rng(flow_cutter_config.random_seed);
@@ -2928,7 +2949,107 @@ vector<Command>cmd = {
 		GeoPos p = {stof(arg[0]), stof(arg[1])};
 		cout << min_preimage_over_id_func(id_func(tail.image_count(), [&](int x){return geo_dist(p, node_geo_pos(x));})) << endl;
 	}
-}
+},
+
+{
+	"save_routingkit_arc_permutation_since_last_load", 1,
+	"Save an arc order in the praktikum 2015/2016 order format",
+	[](vector<string>args){
+
+		if(arc_original_position.image_count() != arc_original_position.preimage_count())
+			throw runtime_error("Not possible because the node count got modified");
+
+		std::vector<unsigned>order(tail.preimage_count());
+		for(unsigned i=0; i<order.size(); ++i)
+			order[i] = arc_original_position[i];
+		save_vector(args[0], order);
+	}
+},
+
+{
+	"reorder_arcs_in_accelerated_flow_cutter_cch_order", 1,
+	"Reorders all arcs in nested dissection order for the expanded graph using flow_cutter accelerated. arg1 must be either <reorder> or <normal>",
+	[](vector<string>arg){
+		if(arg[0] != "reorder" && arg[0] != "normal")
+			throw runtime_error("Invalid arg1: " + arg[0] + ". must bei either <reorder> or <normal>.");
+
+		bool reorder_arcs = arg[0] == "reorder";
+
+		//temporary add back arcs...
+		auto extended_tail = id_id_func(
+			2*tail.preimage_count(), tail.image_count(),
+			[&](int i){
+				if(i < tail.preimage_count())
+					return tail(i);
+				else
+					return head(i - tail.preimage_count());
+			}
+		);
+		auto extended_head = id_id_func(
+			2*tail.preimage_count(), tail.image_count(),
+			[&](int i){
+				if(i < tail.preimage_count())
+					return head(i);
+				else
+					return tail(i - tail.preimage_count());
+			}
+		);
+
+		auto extended_arc_weight = id_func(
+			2*tail.preimage_count(),
+			[&](int i){
+				if(i < tail.preimage_count())
+					return arc_weight(i);
+				else
+					return arc_weight(i - tail.preimage_count());
+			}
+		);
+		auto keep_flag = identify_non_multi_arcs(extended_tail, extended_head);
+
+		for(int i=0; i<tail.preimage_count(); ++i)
+			keep_flag.set(i, true);
+
+		int new_arc_count = count_true(keep_flag);
+		ArrayIDIDFunc new_tail = keep_if(keep_flag, new_arc_count, extended_tail);
+		ArrayIDIDFunc new_head = keep_if(keep_flag, new_arc_count, extended_head);
+		ArrayIDFunc<int> new_arc_weight = keep_if(keep_flag, new_arc_count, extended_arc_weight);
+
+		auto perm = sort_arcs_first_by_tail_second_by_head(new_tail, new_head);
+		new_tail = chain(perm, move(new_tail));
+		new_head = chain(perm, move(new_head));
+		new_arc_weight = chain(perm, move(new_arc_weight));
+
+		ArrayIDIDFunc order;
+
+		//omp_set_nested(true);
+		//#pragma omp parallel num_threads(flow_cutter_config.thread_count)
+		//#pragma omp single nowait
+		{
+			tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+			order = cch_order::compute_nested_dissection_expanded_graph_order(
+				new_tail, new_head, new_arc_weight,
+				flow_cutter::ComputeCut<flow_cutter_accelerated::CutterFactory, ArrayIDFunc<GeoPos>>(node_geo_pos, flow_cutter_config, reorder_arcs)
+			);
+		}
+		order = chain(order, perm);
+
+		auto is_original = id_func(
+			order.preimage_count(),
+			[&](int i){
+				return order(i) >= 0 && order(i) < tail.preimage_count();
+			}
+		);
+		
+		ArrayIDIDFunc original_order = keep_if(is_original, tail.preimage_count(), order);
+		original_order.set_image_count(tail.preimage_count());
+		assert(is_permutation(original_order));
+
+		std::reverse(original_order.begin(), original_order.end());
+
+		permutate_arcs(original_order);
+	}
+},
+
 };
 
 int main(int argc, char*argv[]){
