@@ -3004,20 +3004,34 @@ vector<Command>cmd = {
 					return arc_weight(i - tail.preimage_count());
 			}
 		);
-		auto keep_flag = identify_non_multi_arcs(extended_tail, extended_head);
 
-		for(int i=0; i<tail.preimage_count(); ++i)
-			keep_flag.set(i, true);
+		auto ordered_to_orig = sort_arcs_first_by_tail_second_by_head(extended_tail, extended_head);
+		auto orig_to_ordered = inverse_permutation(ordered_to_orig);
+		auto ordered_ext_tail = chain(ordered_to_orig, extended_tail);
+		auto ordered_ext_head = chain(ordered_to_orig, extended_head);
+		auto ordered_ext_arc_weight = chain(ordered_to_orig, extended_arc_weight);
 
-		int new_arc_count = count_true(keep_flag);
-		ArrayIDIDFunc new_tail = keep_if(keep_flag, new_arc_count, extended_tail);
-		ArrayIDIDFunc new_head = keep_if(keep_flag, new_arc_count, extended_head);
-		ArrayIDFunc<int> new_arc_weight = keep_if(keep_flag, new_arc_count, extended_arc_weight);
+		auto keep_flag = identify_non_multi_arcs(ordered_ext_tail, ordered_ext_head);
 
-		auto perm = sort_arcs_first_by_tail_second_by_head(new_tail, new_head);
-		new_tail = chain(perm, move(new_tail));
-		new_head = chain(perm, move(new_head));
-		new_arc_weight = chain(perm, move(new_arc_weight));
+		for(int i=0; i<extended_tail.preimage_count(); ++i) {
+			if (ordered_ext_tail(i) == ordered_ext_head(i)) {
+				keep_flag.set(i, false);
+			}
+		}
+
+		vector<int> extended_ordered_to_simple(extended_tail.preimage_count(), 0);
+		int id_count = 0;
+		for(int i=0; i<extended_tail.preimage_count(); ++i) {
+			extended_ordered_to_simple[i] = id_count;
+			if (keep_flag(i)) {
+				id_count++;
+			}
+		}
+
+		int simple_arc_count = count_true(keep_flag);
+		ArrayIDIDFunc simple_tail = keep_if(keep_flag, simple_arc_count, ordered_ext_tail);
+		ArrayIDIDFunc simple_head = keep_if(keep_flag, simple_arc_count, ordered_ext_head);
+		ArrayIDFunc<int> simple_arc_weight = keep_if(keep_flag, simple_arc_count, ordered_ext_arc_weight);
 
 		ArrayIDIDFunc order;
 
@@ -3027,26 +3041,31 @@ vector<Command>cmd = {
 		{
 			tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
 			order = cch_order::compute_nested_dissection_expanded_graph_order(
-				new_tail, new_head, new_arc_weight,
+				simple_tail, simple_head, simple_arc_weight,
 				flow_cutter::ComputeCut<flow_cutter_accelerated::CutterFactory, ArrayIDFunc<GeoPos>>(node_geo_pos, flow_cutter_config, reorder_arcs)
 			);
 		}
-		order = chain(order, perm);
+		auto ranks = inverse_permutation(order);
 
-		auto is_original = id_func(
-			order.preimage_count(),
+		auto id_order = identity_permutation(tail.preimage_count());
+		auto final_order = identity_permutation(tail.preimage_count());
+		stable_sort_copy_by_id(
+			std::begin(id_order), std::end(id_order),
+			std::begin(final_order),
+			extended_tail.preimage_count() + 1,
 			[&](int i){
-				return order(i) >= 0 && order(i) < tail.preimage_count();
-			}
+				if (tail(i) == head(i)) {
+					return extended_tail.preimage_count();
+				} else {
+					return ranks[extended_ordered_to_simple[orig_to_ordered[i]]];
+				}
+		  }
 		);
-		
-		ArrayIDIDFunc original_order = keep_if(is_original, tail.preimage_count(), order);
-		original_order.set_image_count(tail.preimage_count());
-		assert(is_permutation(original_order));
 
-		std::reverse(original_order.begin(), original_order.end());
+		assert(is_permutation(final_order));
+		std::reverse(final_order.begin(), final_order.end());
 
-		permutate_arcs(original_order);
+		permutate_arcs(final_order);
 	}
 },
 
