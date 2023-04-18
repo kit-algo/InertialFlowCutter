@@ -39,7 +39,7 @@
 #include <random>
 #include <functional>
 #include <stack>
-#include <tbb/task_scheduler_init.h>
+#include <tbb/global_control.h>
 
 using namespace std;
 
@@ -1904,7 +1904,7 @@ vector<Command>cmd = {
             );
 
 
-			tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+			tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
             save_text_file(
                     args[0],
                     [&](std::ostream&out){
@@ -2454,7 +2454,7 @@ vector<Command>cmd = {
 		if(min_balance < 0 || min_balance > 0.5)
 			throw runtime_error("min balance parameter must be between 0.0 and 0.5");
 
-		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 		permutate_nodes(cch_order::compute_nested_dissection_graph_order(tail, head, arc_weight, inertial_flow::ComputeSeparator(node_geo_pos, min_balance, true)));
 	}
 },
@@ -2472,7 +2472,7 @@ vector<Command>cmd = {
 		if(min_balance < 0 || min_balance > 0.5)
 			throw runtime_error("min balance parameter must be between 0.0 and 0.5");
 
-		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 		permutate_nodes(cch_order::compute_nested_dissection_graph_order(tail, head, arc_weight, inertial_flow::ComputeSeparator(node_geo_pos, min_balance, false)));
 	}
 },
@@ -2571,7 +2571,7 @@ vector<Command>cmd = {
 		if(epsilon < 0 || epsilon > 1)
 			throw runtime_error("epsilon parameter must be between 0.0 and 1.0");
 
-		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 		permutate_nodes(
 			cch_order::compute_cch_graph_order(
 				tail, head, arc_weight,
@@ -2596,7 +2596,7 @@ vector<Command>cmd = {
 		double epsilon = stof(args[0]);
 		if(epsilon < 0 || epsilon > 1)
 			throw runtime_error("epsilon parameter must be between 0.0 and 1.0");
-		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 		permutate_nodes(cch_order::compute_nested_dissection_graph_order(tail, head, arc_weight, my_kahip::ComputeSeparator(epsilon)));
 	}
 },
@@ -2616,7 +2616,7 @@ vector<Command>cmd = {
 		double epsilon = stof(args[0]);
 		if(epsilon < 0 || epsilon > 1)
 			throw runtime_error("epsilon parameter must be between 0.0 and 1.0");
-		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 		save_text_file(args[1],
 			[&](std::ostream&out){
 				permutate_nodes(
@@ -2644,7 +2644,7 @@ vector<Command>cmd = {
 		double epsilon = stof(args[0]);
 		if(epsilon < 0 || epsilon > 1)
 			throw runtime_error("epsilon parameter must be between 0.0 and 1.0");
-		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 		permutate_nodes(cch_order::compute_nested_dissection_graph_order(tail, head, arc_weight, my_kahip::ComputeSeparator2(epsilon)));
 	}
 },
@@ -2664,7 +2664,7 @@ vector<Command>cmd = {
 		if(epsilon < 0 || epsilon > 1)
 			throw runtime_error("epsilon parameter must be between 0.0 and 1.0");
 
-		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 		save_text_file(args[1],
 			[&](std::ostream&out){
 				std::mt19937 rng(flow_cutter_config.random_seed);
@@ -2695,7 +2695,7 @@ vector<Command>cmd = {
 		if(epsilon < 0 || epsilon > 1)
 			throw runtime_error("epsilon parameter must be between 0.0 and 1.0");
 
-		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 		permutate_nodes(
 			cch_order::compute_cch_graph_order(
 				tail, head, arc_weight,
@@ -2720,7 +2720,7 @@ vector<Command>cmd = {
 		if(epsilon < 0 || epsilon > 1)
 			throw runtime_error("epsilon parameter must be between 0.0 and 1.0");
 
-		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 		save_text_file(args[1],
 			[&](std::ostream&out){
 				permutate_nodes(
@@ -2748,7 +2748,7 @@ vector<Command>cmd = {
 		if(min_balance < 0 || min_balance > 0.5)
 			throw runtime_error("min balance parameter must be between 0.0 and 0.5");
 
-		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 		permutate_nodes(cch_order::compute_cch_graph_order(tail, head, arc_weight, inertial_flow::ComputeSeparator(node_geo_pos, min_balance, true)));
 	}
 },
@@ -2766,7 +2766,7 @@ vector<Command>cmd = {
 		if(min_balance < 0 || min_balance > 0.5)
 			throw runtime_error("min balance parameter must be between 0.0 and 0.5");
 
-		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 		permutate_nodes(cch_order::compute_cch_graph_order(tail, head, arc_weight, inertial_flow::ComputeSeparator(node_geo_pos, min_balance, false)));
 	}
 },
@@ -2866,7 +2866,7 @@ vector<Command>cmd = {
 			throw runtime_error("Graph must not have multi arcs");
 		if(!is_loop_free(tail, head))
 			throw runtime_error("Graph must not have loops");
-		tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+		tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 		permutate_nodes(
 			cch_order::compute_cch_graph_order(
 				tail, head, arc_weight,
@@ -2893,7 +2893,7 @@ vector<Command>cmd = {
 		//#pragma omp parallel num_threads(flow_cutter_config.thread_count)
 		//#pragma omp single nowait
 		{
-			tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+			tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 			order = cch_order::compute_cch_graph_order(tail, head, arc_weight, flow_cutter::ComputeSeparator<flow_cutter_accelerated::CutterFactory, ArrayIDFunc<GeoPos>>(node_geo_pos, flow_cutter_config));
 		}
 		permutate_nodes(order);
@@ -3025,7 +3025,7 @@ vector<Command>cmd = {
 		//#pragma omp parallel num_threads(flow_cutter_config.thread_count)
 		//#pragma omp single nowait
 		{
-			tbb::task_scheduler_init scheduler(flow_cutter_config.thread_count);
+			tbb::global_control gc(tbb::global_control::max_allowed_parallelism, flow_cutter_config.thread_count);
 			order = cch_order::compute_nested_dissection_expanded_graph_order(
 				new_tail, new_head, new_arc_weight,
 				flow_cutter::ComputeCut<flow_cutter_accelerated::CutterFactory, ArrayIDFunc<GeoPos>>(node_geo_pos, flow_cutter_config, reorder_arcs)
