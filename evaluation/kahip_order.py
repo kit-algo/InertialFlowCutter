@@ -1,11 +1,12 @@
-import subprocess
+import pathlib
 import re
+import subprocess
 import sys
 
 experiments_folder = ""
 
-binary_path = "./../build/"
-console = binary_path + "console"
+binary_path = pathlib.Path(__file__).parent.absolute() / "../build"
+console = str(binary_path / "console")
 
 def graph_path(G):
     return experiments_folder + G + "/"
@@ -31,7 +32,7 @@ def save_kahip_cch_order(console, graph_path, order_path, info_log):
     args.append("flow_cutter_set")
     args.append("random_seed")
     args.append("5489")
-    
+
     args.append("report_time")
     args.append("reorder_nodes_in_kahip_nested_dissection_order")
     args.append("0.2")   #maximum imbalance

@@ -1,9 +1,12 @@
-import configurable_inertialflowcutter_order as ifc
-import pandas as pd
-import numpy as np
+import os
+import pathlib
 import re
 import subprocess
-import os
+
+import configurable_inertialflowcutter_order as ifc
+import numpy as np
+import pandas as pd
+
 
 experiments_folder = ""
 graph = "col"       #TODO replace again with europe
@@ -12,10 +15,10 @@ metric_path = graph_path + "travel_time"
 query_sources = experiments_folder + graph + ".q.s"
 query_targets = experiments_folder + graph + ".q.t"
 
-binary_path = "./../build/"
-order_console = binary_path + "console"
-customization_binary = binary_path + "customize"
-query_binary = binary_path + "query"
+binary_path = pathlib.Path(__file__).parent.absolute() / "../build"
+order_console = str(binary_path / "console")
+customization_binary = str(binary_path / "customize")
+query_binary = str(binary_path / "query")
 
 
 def config_contained(config, results):

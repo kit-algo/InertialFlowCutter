@@ -1,18 +1,21 @@
-import pandas as pd
-import numpy as np
+import os
+import pathlib
 import re
 import subprocess
-import os
+
+import pandas as pd
+import numpy as np
+
 
 experiments_folder = ""
 
 graphs = ["col", "cal", "europe", "usa"]
 partitioners = ["metis", "kahip_v0_71", "kahip_v1_00_cut", "kahip_v2_11", "inertial_flow", "flowcutter3", "flowcutter20", "flowcutter100","inertialflowcutter4", "inertialflowcutter8", "inertialflowcutter12", "inertialflowcutter16"]
 
-binary_path = "./../build/"
-console = binary_path + "console"
-customization_binary = binary_path + "customize"
-query_binary = binary_path + "query"
+binary_path = pathlib.Path(__file__).parent.absolute() / "../build"
+console = str(binary_path / "console")
+customization_binary = str(binary_path / "customize")
+query_binary = str(binary_path / "query")
 
 def config_contained(G, P, results):
     cpd = pd.DataFrame.from_dict({
@@ -42,13 +45,13 @@ def query_file(G):
 def parse_order_log(G,P):
     args = [console]
     args.append("load_routingkit_unweighted_graph")
-    
+
     args.append(graph_path(G) + "first_out")
     args.append(graph_path(G) + "head")
     args.append("add_back_arcs")
     args.append("remove_multi_arcs")
     args.append("remove_loops")
-    
+
     args.append("permutate_nodes_routingkit")
     args.append(order_path(G,P))
 
@@ -96,7 +99,7 @@ def run_queries(G,P):
     return float(t)
 
 def main():
-    
+
     order_times = pd.read_csv(experiments_folder + "order_running_time.csv")
 
     if not os.path.isfile(experiments_folder + "order_experiments.csv"):    #Create nonsensical file
@@ -138,7 +141,7 @@ def main():
     results.sort_values(["graph_id", "partitioner_id"], ascending=[True,True], inplace=True)
     results.drop(columns=["graph_id", "partitioner_id"])
     results.to_csv(experiments_folder + "order_experiments.csv", index=False)
-    
+
 
 
 if __name__ == '__main__':
